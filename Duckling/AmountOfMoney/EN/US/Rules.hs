@@ -54,7 +54,7 @@ ruleDollarCoin :: Rule
 ruleDollarCoin = Rule
   { name = "dollar coin"
   , pattern =
-    [ regex "(nickel|dime|quarter)s?"
+    [ regex "(nickel|dime)s?"
     ]
   , prod = \tokens -> case tokens of
       (Token RegexMatch (GroupMatch (match:_)):_) -> do
