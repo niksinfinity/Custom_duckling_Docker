@@ -38,6 +38,11 @@ allExamples = concat
              , "a dime"
              , "two nickels"
              ]
+  , examples (simple USD 0.25)
+             [ "quarter"
+             , "a quarter"
+             , "five nickels"
+             ]
   , examples (simple USD 0.05)
              [ "nickel"
              , "a nickel"

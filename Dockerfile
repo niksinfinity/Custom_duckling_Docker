@@ -1,39 +1,33 @@
-FROM haskell:8.6.3 AS builder
+FROM ubuntu:18.04
 
-RUN apt-get update -qq && \
-  apt-get install -qq -y libpcre3 libpcre3-dev build-essential --fix-missing --no-install-recommends && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get update
+RUN apt-get -y upgrade
 
-RUN mkdir /log
-
-WORKDIR /duckling
-
-ADD stack.yaml .
-
-ENV LANG=C.UTF-8
-
-RUN stack setup
-
-ADD . .
-
-# NOTE:`stack build` will use as many cores as are available to build
-# in parallel. However, this can cause OOM issues as the linking step
-# in GHC can be expensive. If the build fails, try specifying the
-# '-j1' flag to force the build to run sequentially.
-RUN stack install
-
-FROM debian:buster
-
+# Set all environment variables
+ENV TZ America/New_York
+ENV DEBIAN_FRONTEND noninteractive
 ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
 
-RUN apt-get update -qq && \
-  apt-get install -qq -y libpcre3 libgmp10 --no-install-recommends && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Install dependencies
+RUN apt-get -y install -y build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev python-openssl git libmysqlclient-dev libpcre3-dev
 
-COPY --from=builder /root/.local/bin/duckling-example-exe /usr/local/bin/
+RUN git clone git://github.com/yyuu/pyenv.git .pyenv
+RUN git clone https://github.com/yyuu/pyenv-virtualenv.git ~/.pyenv/plugins/pyenv-virtualenv
 
-EXPOSE 6666
+RUN mkdir /home/duckling
 
-CMD ["duckling-example-exe", "-p", "6666"]
+WORKDIR /home/duckling/
+
+COPY . .
+
+RUN wget -qO- https://get.haskellstack.org/ | sh
+
+RUN stack build
+
+EXPOSE 8080
+
+CMD ["stack", "exec", "duckling-example-exe", "--allow-different-user","--", "-p", "6666"]
+
+
+
